@@ -1,0 +1,64 @@
+version: "3"
+
+services:
+  db_postgres:
+    networks:
+      - gobarber
+    restart: on-failure
+    image: postgres:12.1-alpine
+    container_name: "postgres_gobarber"
+    environment:
+      - POSTGRES_DB=gobarber
+      - POSTGRES_USER=gobarber
+      # - POSTGRES_PASSWORD:docker
+    volumes:
+      - "./database/postgres:/var/lib/postgresql/data"
+    ports:
+      - 5432:5432
+
+  # db_mongo:
+  #   container_name: mongo_gobarber
+  #   image: mongo:3.4.21-xenial
+  #   ports:
+  #     - 27017:27017
+  #   networks:
+  #     - gobarber
+  #   restart: on-failure
+  #   volumes:
+  #     - ./src/database/mongodb:/var/lib/mongodb/data
+
+  # nginx:
+  #   container_name: nginx_gobarber
+  #   build: ./nginx
+  #   ports:
+  #     - 80:80
+  #     - 443:443
+  #   networks:
+  #     - gobarber
+  #   restart: on-failure
+  #   volumes:
+  #     - ./nginx/sites-enabled:/etc/nginx/sites-enabled
+  #     - ./nginx/conf.d:/etc/nginx/conf.d
+  #     - ../frontend/build:/var/www/build
+  # - /etc/letsencrypt:/letsencrypt
+
+  api_node:
+    build: .
+    networks:
+      - gobarber
+    links:
+      - db_postgres
+      # - db_mongo
+    depends_on:
+      - db_postgres
+      # - db_mongo
+    container_name: "node_gobarber"
+    volumes:
+      - .:/usr/app
+    ports:
+      - 3333:3333
+    command: "sh /usr/app/start.sh"
+    # env_file: .dockerenv
+
+networks:
+  gobarber:
